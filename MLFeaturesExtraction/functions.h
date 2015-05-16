@@ -35,7 +35,11 @@ void nothing();
 
 vector<int> feat_vect(vector<Mat> input);
 
+vector<int> feat_vect_t(vector<Mat> input);
+
 vector<Mat> restore_feat_vect(vector<uchar> input, Rect patch);
+
+vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch);
 
 vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set);
 

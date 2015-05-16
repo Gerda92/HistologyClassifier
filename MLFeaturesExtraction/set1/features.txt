@@ -13,3 +13,4 @@ r,median,11
 h,median,11
 s,median,11
 v,median,11
+h,hist,gauss,

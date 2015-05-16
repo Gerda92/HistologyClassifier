@@ -389,8 +389,37 @@ vector<int> feat_vect(vector<Mat> input) {
 	return output;
 }
 
+vector<int> feat_vect_t(vector<Mat> input) {
+	vector<int> output(input[0].rows*input[0].cols*input.size());
+	for (int f = 0; f < input.size(); f++) {
+		for (int i = 0; i < input[f].rows; i++) {
+			for (int j = 0; j < input[f].cols; j++) {
+				int example = i*input[f].cols+j;
+				int index = example*input.size()+f;
+				output[index] = (int)input[f].at<uchar>(i,j);
+			}
+		}
 
-vector<Mat> restore_feat_vect(vector<uchar> input, Rect patch) {
+	}
+	return output;
+}
+
+vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch) {
+	vector<Mat> features(nf, Mat(Size(patch.height, patch.width), CV_8UC1));
+	for (int f = 0; f < nf; f++) {
+		vector<int> v(patch.height*patch.width);
+		for (int i = 0; i < patch.height*patch.width; i++) {
+			v[i] = input[nf*i+f];
+		}
+		Mat m(v);
+		m = m.reshape(1, patch.height);
+		imwrite("s" + to_string(f)+".png", m);
+		features[f] = m.clone();
+	}
+	return features;
+}
+
+vector<Mat> restore_feat_vect(vector<int> input, Rect patch) {
 	vector<Mat> features(12, Mat(Size(patch.height, patch.width), CV_8UC1));
 	for (int f = 0; f < 12; f++) {
 		vector<uchar>vec(input.begin() + f*patch.height*patch.width, input.begin() + (f+1)*patch.height*patch.width);
@@ -473,7 +502,9 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set) {
 	inRange(orig_features[3], 130, 142, thrsh);
 	string fID = of[3] + ",hist,gauss,";
 	GaussianBlur(thrsh, thrsh, Size(21, 21), 20);
+	//features.push_back(thrsh);
 	imwrite("set" + to_string(set) + "/" + fID + ".png", thrsh);
+	ffile << fID <<endl;
 
 	ffile.close();
 

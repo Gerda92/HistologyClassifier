@@ -29,24 +29,34 @@ int main( int argc, char** argv ) {
 	Rect ROI = Rect(400, 900, 200, 250);
 	
 	vector<Mat> features = get_ROI_features(slice, part, ROI, 1);
+
 	
+	Mat tf = features[0].reshape(1, features[0].rows*features[0].cols);
+	for(int i = 1; i < features.size(); i++) {
+		Mat f = features[i].reshape(1, features[0].rows*features[0].cols);
+		hconcat(tf, f, tf);
+	}
+	
+
+	/*
 	vector<int> v = load_ROI_features("set1/");
 
-	vector<int> v2 = feat_vect(features);
+	vector<int> v2 = feat_vect_t(features);
+	restore_feat_vect_t(v2, features.size(), ROI);
 	
 	int example = 10;
 	for(int i = 0; i < features.size(); i++) {
-		cout<<(int)v[ROI.width*ROI.height*i + example]<<endl;
+		cout<<v[ROI.width*ROI.height*i + example]<<endl;
 	}
 
 	for(int i = 0; i < features.size(); i++) {
-		cout<<(int)v2[ROI.width*ROI.height*i + example]<<endl;
+		cout<<v2[features.size()*example + i]<<endl;
 	}
 	
-
+	
 	int i;
 	cin >> i;
-
+	*/
 	/*
 	Mat src, hsv, mask;
 	
