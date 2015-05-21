@@ -399,9 +399,13 @@ vector<int> feat_vect_t(vector<Mat> input) {
 				output[index] = (int)input[f].at<uchar>(i,j);
 			}
 		}
-
 	}
 	return output;
+}
+
+vector<int> feat_vect_t(Mat input) {
+	vector<Mat> v(1, input);
+	return feat_vect_t(v);
 }
 
 vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch) {
@@ -431,7 +435,7 @@ vector<Mat> restore_feat_vect(vector<int> input, Rect patch) {
 	return features;
 }
 
-vector<int> load_ROI_features(string path) {
+vector<Mat> load_ROI_features(string path) {
 	ifstream ffile;
 
 	ffile.open(path + "features.txt");
@@ -446,15 +450,21 @@ vector<int> load_ROI_features(string path) {
 		features.push_back(img);
 	}
 	ffile.close();
-	return feat_vect(features);
+	return features;
 }
 
-vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set) {
+Mat load_ROI_classes(string path) {
+	return imread(path+"fl.png");
+}
+
+vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
+							 bool write_thresh, bool write_blur, bool write_orig) {
 
 	Mat src, hsv, mask;
 	
 	src = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 1);
 	mask = imread("E:/DataMLMI/Slice" + to_string(slice) + "/Labels_" + part + ".png", 0);
+	imwrite("set" + to_string(set) + "/fl.png", mask(ROI));
 	src = src(ROI);
 
 	vector<Mat> orig_features;
@@ -475,11 +485,12 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set) {
 	vector<Mat> features(orig_features.begin(), orig_features.end());
 	const string of[] = {"b", "g", "r", "h", "s", "v"};
 	for (int i = 0; i < features.size(); i++) {
-		imwrite("set" + to_string(set) + "/" + of[i] + ".png", features[i]);
+		if (write_orig)
+			imwrite("set" + to_string(set) + "/" + of[i] + ".png", features[i]);
 		ffile << of[i] << endl;
 	}
 
-	int kernels[] = {11};
+	int kernels[] = {11, 17};
 	int nkernels = sizeof(kernels)/sizeof(int);
 
 	//features.reserve(nkernels*orig_features.size());
@@ -488,25 +499,42 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set) {
 		for (int i = 0; i < nkernels; i++) {
 			Mat filtered(src.size(), CV_8UC1);
 			int index = f*nkernels + i;
-			medianBlur(orig_features[f], filtered, kernels[i]);
-			features.push_back(filtered);
-			//imshow("W", filtered);
 			string fID = of[f] + ",median," + to_string(kernels[i]);
-			imwrite("set" + to_string(set) + "/" + fID + ".png", filtered);
+			if (write_blur) {
+				medianBlur(orig_features[f], filtered, kernels[i]);
+				//imshow("W", filtered);
+				imwrite("set" + to_string(set) + "/" + fID + ".png", filtered);
+			}
+			features.push_back(filtered);
 			ffile << fID <<endl;
 		}
 	}
 
-	// detecting red channel high
+	// detecting hue
+	int channel = 3; // Hue
 	Mat thrsh;
-	inRange(orig_features[3], 130, 142, thrsh);
-	string fID = of[3] + ",hist,gauss,";
-	GaussianBlur(thrsh, thrsh, Size(21, 21), 20);
-	//features.push_back(thrsh);
-	imwrite("set" + to_string(set) + "/" + fID + ".png", thrsh);
-	ffile << fID <<endl;
-
+	int ranges[] = {130, 139};
+	int nranges = sizeof(kernels)/sizeof(int)/2;
+	int size = 31; int sigma = 20;
+	for (int i = 0; i < nranges; i++) {
+		inRange(orig_features[channel], ranges[i], ranges[i+1], thrsh);
+		string fID = of[channel] + ",hist," + to_string(ranges[i]) + ","
+			+ to_string(ranges[i+1]) + ",gauss," + to_string(sigma);
+		GaussianBlur(thrsh, thrsh, Size(size, size), sigma);
+		imwrite("set" + to_string(set) + "/" + fID + ".png", thrsh);
+		features.push_back(thrsh);
+		ffile << fID <<endl;
+	}
 	ffile.close();
 
 	return features;
+}
+
+vector<int> concat_sets(vector<string> sets) {
+	vector<int> f;
+	for (int i = 0; i < sets.size(); i++) {
+		vector<int> fi = feat_vect_t(load_ROI_features(sets[i]));
+		f.insert(f.end(), fi.begin(), fi.end());
+	}
+	return f;
 }

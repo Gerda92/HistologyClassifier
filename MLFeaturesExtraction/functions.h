@@ -37,12 +37,19 @@ vector<int> feat_vect(vector<Mat> input);
 
 vector<int> feat_vect_t(vector<Mat> input);
 
+vector<int> feat_vect_t(Mat input);
+
 vector<Mat> restore_feat_vect(vector<uchar> input, Rect patch);
 
 vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch);
 
-vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set);
+vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true);
 
-vector<int> load_ROI_features(string path);
+vector<Mat> load_ROI_features(string path);
+
+vector<int> concat_sets(vector<string> sets);
+
+Mat load_ROI_classes(string path);
 
 #endif

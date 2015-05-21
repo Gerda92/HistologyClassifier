@@ -26,17 +26,52 @@ int main( int argc, char** argv ) {
 	int slice = 1;
 	string part = "30 Gy 2 Wo Le 2 65_part1";
 
-	Rect ROI = Rect(400, 900, 200, 250);
-	
-	vector<Mat> features = get_ROI_features(slice, part, ROI, 1);
+	//Rect ROI = Rect(400, 900, 200, 250);
+	//Rect ROI = Rect(0, 0, 6660, 4236);
+	Rect rects[] = {Rect(420, 970, 180, 150), Rect(1380, 1470, 200, 190), Rect(1950, 1870, 100, 100)};
+	/*
+	int offset = 3;
+	for (int i = 0; i < sizeof(rects)/sizeof(*rects); i++) {
+		string set = "set" + to_string(i + offset) + "/";
+		mkdir(set.c_str());
+		get_ROI_features(slice, part, rects[i], i+offset);
+	}
+	*/
+	const char * sets[] = {"set3/", "set4/", "set5/"};
+	vector<string> vsets(sets, end(sets));
+	vector<int> features = concat_sets(vsets);
 
 	
+
+	//vector<Mat> features = load_ROI_features(set);
+
+	/*
 	Mat tf = features[0].reshape(1, features[0].rows*features[0].cols);
 	for(int i = 1; i < features.size(); i++) {
 		Mat f = features[i].reshape(1, features[0].rows*features[0].cols);
 		hconcat(tf, f, tf);
 	}
+
+	tf.convertTo(tf, CV_32FC1);
+
+	Mat classes = load_ROI_classes(set).reshape(1,50000);
 	
+	classes.convertTo(classes, CV_32SC1);
+    RTrees::Params  params( 4, // max_depth,
+                        500, // min_sample_count,
+                        0, // regression_accuracy,
+                        false, // use_surrogates,
+                        2, // max_categories,
+                        Mat(), // priors,
+                        false, // calc_var_importance,
+                        3, // nactive_vars,
+                        TermCriteria(TermCriteria::MAX_ITER, 5, 0) // max_num_of_trees_in_the_forest,
+                       );
+
+    Ptr<RTrees> rtrees = StatModel::train<RTrees>(tf, ROW_SAMPLE, classes, params);
+	*/
+//	int i;
+//	cin>>i;
 
 	/*
 	vector<int> v = load_ROI_features("set1/");
@@ -172,7 +207,7 @@ int main( int argc, char** argv ) {
 		imwrite("Restored Window " + to_string(i) + ".png", features[i]);
 	}
 	*/
-	waitKey();
+//	waitKey();
 
 	return 0;
 }

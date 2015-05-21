@@ -8,9 +8,15 @@ h
 s
 v
 b,median,11
+b,median,17
 g,median,11
+g,median,17
 r,median,11
+r,median,17
 h,median,11
+h,median,17
 s,median,11
+s,median,17
 v,median,11
-h,hist,gauss,
+v,median,17
+h,hist,130,140,gauss,10,31
