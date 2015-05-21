@@ -29,6 +29,7 @@ int main( int argc, char** argv ) {
 	//Rect ROI = Rect(400, 900, 200, 250);
 	//Rect ROI = Rect(0, 0, 6660, 4236);
 	Rect rects[] = {Rect(420, 970, 180, 150), Rect(1380, 1470, 200, 190), Rect(1950, 1870, 100, 100)};
+	vector<Rect> patches(rects, end(rects));
 	/*
 	int offset = 3;
 	for (int i = 0; i < sizeof(rects)/sizeof(*rects); i++) {
@@ -40,8 +41,8 @@ int main( int argc, char** argv ) {
 	const char * sets[] = {"set3/", "set4/", "set5/"};
 	vector<string> vsets(sets, end(sets));
 	vector<int> features = concat_sets(vsets);
-
-	
+	vector<int> classes = concat_labels(vsets);
+	restore_patches(features, 19, patches);
 
 	//vector<Mat> features = load_ROI_features(set);
 
@@ -207,7 +208,7 @@ int main( int argc, char** argv ) {
 		imwrite("Restored Window " + to_string(i) + ".png", features[i]);
 	}
 	*/
-//	waitKey();
+	waitKey();
 
 	return 0;
 }

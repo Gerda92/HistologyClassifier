@@ -422,6 +422,20 @@ vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch) {
 	}
 	return features;
 }
+vector<vector<Mat>> restore_patches(vector<int> input, int nf, vector<Rect> patches) {
+	vector<vector<Mat>> v;
+	_mkdir("Test restore/");
+	int offset = 0;
+	for (int i = 0; i < patches.size(); i++) {
+		vector<int> set(input.begin()+offset, input.end());
+		v.push_back(restore_feat_vect_t(set, nf, patches[i]));
+		for(int j = 0; j < v[i].size(); j++) {
+			imwrite("Test restore/" + to_string(i) + to_string(j) + ".png", v[i][j]);
+		}
+		offset += patches[i].width*patches[i].height*nf;
+	}
+	return v;
+}
 
 vector<Mat> restore_feat_vect(vector<int> input, Rect patch) {
 	vector<Mat> features(12, Mat(Size(patch.height, patch.width), CV_8UC1));
@@ -447,6 +461,7 @@ vector<Mat> load_ROI_features(string path) {
 		//cout<<f<<endl;
 		Mat img = imread(path+f+".png", 0);
 		//imshow(f, img);
+		cout<<img.rows<<" "<<img.cols<<endl;
 		features.push_back(img);
 	}
 	ffile.close();
@@ -534,6 +549,17 @@ vector<int> concat_sets(vector<string> sets) {
 	vector<int> f;
 	for (int i = 0; i < sets.size(); i++) {
 		vector<int> fi = feat_vect_t(load_ROI_features(sets[i]));
+		//restore_feat_vect_t(fi,19,);
+		cout<<fi.size()<<endl;
+		f.insert(f.end(), fi.begin(), fi.end());
+	}
+	return f;
+}
+
+vector<int> concat_labels(vector<string> sets) {
+	vector<int> f;
+	for (int i = 0; i < sets.size(); i++) {
+		vector<int> fi = feat_vect_t(load_ROI_classes(sets[i]));
 		f.insert(f.end(), fi.begin(), fi.end());
 	}
 	return f;

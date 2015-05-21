@@ -52,4 +52,8 @@ vector<int> concat_sets(vector<string> sets);
 
 Mat load_ROI_classes(string path);
 
+vector<int> concat_labels(vector<string> sets);
+
+vector<vector<Mat>> restore_patches(vector<int> input, int nf, vector<Rect> patches);
+
 #endif
