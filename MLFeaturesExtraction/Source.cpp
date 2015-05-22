@@ -27,7 +27,20 @@ int main( int argc, char** argv ) {
 	string part = "30 Gy 2 Wo Le 2 65_part1";
 
 	//Rect ROI = Rect(400, 900, 200, 250);
-	//Rect ROI = Rect(0, 0, 6660, 4236);
+	Rect ROI = Rect(0, 0, 6660, 4236);
+	get_ROI_features(slice, part, ROI, 6);
+	//Rect ROI = Rect(0, 0, 4300, 4236);
+	//_mkdir("rnd");
+	//generate_random_subset("set2/", "rnd/", ROI);
+
+	/*
+	Mat mask, image;
+	image = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 0);
+	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part + ".png", 0);
+	vector<int> rand = generate_random_pixels(mask);
+	get_pixels(image, rand);
+	*/
+
 	Rect rects[] = {Rect(420, 970, 180, 150), Rect(1380, 1470, 200, 190), Rect(1950, 1870, 100, 100)};
 	vector<Rect> patches(rects, end(rects));
 	/*
@@ -37,7 +50,7 @@ int main( int argc, char** argv ) {
 		mkdir(set.c_str());
 		get_ROI_features(slice, part, rects[i], i+offset);
 	}
-	*/
+	
 	const char * sets[] = {"set3/", "set4/", "set5/"};
 	vector<string> vsets(sets, end(sets));
 	vector<int> features = concat_sets(vsets);
@@ -46,7 +59,7 @@ int main( int argc, char** argv ) {
 
 	//vector<Mat> features = load_ROI_features(set);
 
-	/*
+	
 	Mat tf = features[0].reshape(1, features[0].rows*features[0].cols);
 	for(int i = 1; i < features.size(); i++) {
 		Mat f = features[i].reshape(1, features[0].rows*features[0].cols);

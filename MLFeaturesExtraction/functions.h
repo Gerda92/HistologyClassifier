@@ -8,6 +8,8 @@
 #include <fstream>
 #include <ctime>
 #include <direct.h>
+#include <numeric>
+#include <random>
 
 using namespace std;
 using namespace cv;
@@ -55,5 +57,13 @@ Mat load_ROI_classes(string path);
 vector<int> concat_labels(vector<string> sets);
 
 vector<vector<Mat>> restore_patches(vector<int> input, int nf, vector<Rect> patches);
+
+vector<int> generate_random_pixels(Mat mask);
+
+Mat get_pixels(Mat image, vector<int> pixels);
+
+void generate_random_subset(string path, string newpath, Rect patch);
+
+bool copy_file(string SRC, string DEST);
 
 #endif
