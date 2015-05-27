@@ -98,13 +98,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\boost_1_58_0;E:\ocv\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\boost_1_58_0;F:\ocv\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\ocv\opencv\build\bin\Debug;E:\ocv\opencv\build\lib\Debug;E:\ocv\opencv\build\x64\vc11\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\ocv\opencv\build\bin\Debug;F:\ocv\opencv\build\lib\Debug;F:\ocv\opencv\build\x64\vc11\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_core300d.lib;opencv_imgproc300d.lib;opencv_highgui300d.lib;opencv_ml300d.lib;opencv_features2d300d.lib;opencv_imgcodecs300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -146,6 +146,9 @@
     <ClCompile Include="functions.cpp" />
     <ClCompile Include="functions.h" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="helpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

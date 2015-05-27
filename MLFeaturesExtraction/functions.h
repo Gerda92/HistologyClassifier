@@ -48,6 +48,12 @@ vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch);
 vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 							 bool write_thresh = true, bool write_blur = true, bool write_orig = true);
 
+vector<Mat> get_ROI_features(int slice, string part, Rect ROI, string path,
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true);
+
+vector<Mat> get_ROI_features(int slice, int part, Rect ROI, string path,
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true);
+
 vector<Mat> load_ROI_features(string path);
 
 vector<int> concat_sets(vector<string> sets);
@@ -58,12 +64,28 @@ vector<int> concat_labels(vector<string> sets);
 
 vector<vector<Mat>> restore_patches(vector<int> input, int nf, vector<Rect> patches);
 
-vector<int> generate_random_pixels(Mat mask);
+vector<int> generate_random_pixels(Mat mask, float n2p);
 
 Mat get_pixels(Mat image, vector<int> pixels);
 
-void generate_random_subset(string path, string newpath, Rect patch);
+void generate_random_subset(string path, string newpath, Rect patch, float n2p);
 
 bool copy_file(string SRC, string DEST);
+
+void extract_patch(string path, Rect ROI, string newpath);
+
+vector<vector<string>> read_image_names(string path = "../ReadImageNames/example.txt");
+
+void bulk_feature_creation(vector<int> images, string base_path, int ratio);
+
+vector<vector<Mat>> bulkLoad(vector<string> paths);
+
+vector<vector<int>> bulkFeatVectT(vector<vector<Mat>> in);
+
+vector<string> get_paths(vector<int> images, string base_path);
+
+vector<int> exclude_set(vector<vector<int>> totrain, int n) ;
+
+vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov);
 
 #endif

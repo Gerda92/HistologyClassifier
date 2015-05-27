@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "helpers.h"
 
 clock_t then = clock();
 clock_t now;
@@ -18,44 +18,118 @@ string time() {
 	return str;
 }
 
+
+
 int main( int argc, char** argv ) {
 	
 	cout<<time()<<endl;
 	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
 
 	int slice = 1;
-	string part = "30 Gy 2 Wo Le 2 65_part1";
+	string part = "30 Gy 2 Wo Le 2 65_part1.png";
 
+	int img[] = {1, 1, 2, 1, 3, 1, 4, 1, 5, 1, 6, 1};
+	
+	vector<string> paths = get_paths(vector<int>(img, end(img)), "crossvalid");
+
+	for (int i = 0; i < paths.size(); i++) {
+		precomputeROI(paths[i]);
+		cout<<time()<<endl;
+		cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+		vector<int> f = loadFeaturesFast(paths[i]);
+		cout<<time()<<endl;
+		cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	}
+
+	vector<vector<int>> features =  bulkLoadVectorize(paths, "features");
+	vector<vector<int>> labels = bulkLoadVectorize(paths, "labels");
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+
+	//vector<string> paths_test = get_paths(vector<int>(img, end(img)), "crossvalid");
+
+	//vector<vector<int>> features_test = bulkLoadVectorize(paths_test, "features");
+	//vector<vector<int>> labels_test = bulkLoadVectorize(paths_test, "labels");
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	// cross validation
+	for (int i = 0; i < paths.size(); i++) {
+		vector<int> feat = exclude_set(features, i);
+		vector<int> lab = exclude_set(labels, i);
+		// train
+		//vector<int> featt = features_test[i];
+		//vector<int> labt = labels_test[i];
+		// test
+		cout<<time()<<endl;
+		cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	}
+	
+	// Fetures for small patch
 	//Rect ROI = Rect(400, 900, 200, 250);
-	Rect ROI = Rect(0, 0, 6660, 4236);
-	get_ROI_features(slice, part, ROI, 6);
-	//Rect ROI = Rect(0, 0, 4300, 4236);
-	//_mkdir("rnd");
-	//generate_random_subset("set2/", "rnd/", ROI);
-
 	/*
-	Mat mask, image;
-	image = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 0);
-	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part + ".png", 0);
-	vector<int> rand = generate_random_pixels(mask);
-	get_pixels(image, rand);
-	*/
+	_mkdir("set11");
+	get_ROI_features(slice, part, ROI, 11);
 
+	// Features for three small selected patches
 	Rect rects[] = {Rect(420, 970, 180, 150), Rect(1380, 1470, 200, 190), Rect(1950, 1870, 100, 100)};
 	vector<Rect> patches(rects, end(rects));
-	/*
-	int offset = 3;
+
+	int offset = 13;
 	for (int i = 0; i < sizeof(rects)/sizeof(*rects); i++) {
 		string set = "set" + to_string(i + offset) + "/";
-		mkdir(set.c_str());
+		_mkdir(set.c_str());
 		get_ROI_features(slice, part, rects[i], i+offset);
 	}
+	
 	
 	const char * sets[] = {"set3/", "set4/", "set5/"};
 	vector<string> vsets(sets, end(sets));
 	vector<int> features = concat_sets(vsets);
 	vector<int> classes = concat_labels(vsets);
 	restore_patches(features, 19, patches);
+	
+
+	// 2/3 training set features
+	ROI = Rect(0, 0, 4300, 4236);
+	int ratios[] = {150, 200};
+	for (int i = 0; i < sizeof(ratios)/sizeof(*ratios); i++) {
+		string set = "rnd" + to_string(ratios[i]) + "/";
+		_mkdir(set.c_str());
+		generate_random_subset("set17/", set, ROI, ratios[i]);
+	}
+
+	
+	// 1/3 test set features
+	ROI = Rect(4301, 0, 6660 - 4301, 4236);
+	_mkdir("set18");
+	get_ROI_features(slice, part, ROI, 18);
+	//Rect ROI = Rect(0, 0, 6660, 4236);
+	//get_ROI_features(slice, part, ROI, 6, true, false, false);
+
+	//_mkdir("rnd3");
+	//generate_random_subset("set6/", "rnd3/", ROI, 3);
+	//extract_patch("set6/", ROI, "test1/");
+	
+	
+
+	ROI = Rect(0, 0, 6660, 4236);
+	_mkdir("set16");
+	get_ROI_features(slice, part, ROI, 16, true, false, false);
+	//Rect ROI = Rect(0, 0, 6660, 4236);
+	//get_ROI_features(slice, part, ROI, 6, true, false, false);
+
+	
+
+
+	Mat mask, image;
+	image = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 0);
+	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part + ".png", 0);
+	vector<int> rand = generate_random_pixels(mask);
+	get_pixels(image, rand);
+	*/
+	/*
 
 	//vector<Mat> features = load_ROI_features(set);
 

@@ -488,13 +488,27 @@ Mat load_ROI_classes(string path) {
 
 vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 							 bool write_thresh, bool write_blur, bool write_orig) {
+	return get_ROI_features(slice, part, ROI, "set" + to_string(set) + "/",
+		write_thresh, write_blur, write_orig);
+}
 
-	_mkdir(("set" + to_string(set) + "/").c_str());
+vector<Mat> get_ROI_features(int slice, int part, Rect ROI, string path,
+							 bool write_thresh, bool write_blur, bool write_orig) {
+	vector<vector<string>> names = read_image_names();
+	return get_ROI_features(slice, names[slice-1][part-1], ROI, path,
+		write_thresh, write_blur, write_orig);
+}
+
+vector<Mat> get_ROI_features(int slice, string part, Rect ROI, string path,
+							 bool write_thresh, bool write_blur, bool write_orig) {
+
+	_mkdir(path.c_str());
 	Mat src, hsv, mask;
 	
-	src = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 1);
-	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part + ".png", 0);
-	imwrite("set" + to_string(set) + "/fl.png", mask(ROI));
+	src = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part, 1);
+	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part, 0);
+	if (ROI.width == 0) ROI = Rect(0, 0, src.cols, src.rows);
+	imwrite(path + "fl.png", mask(ROI));
 	src = src(ROI);
 
 	vector<Mat> orig_features;
@@ -508,7 +522,7 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 
 	ofstream ffile;
 
-	ffile.open("set" + to_string(set) + "/features.txt");
+	ffile.open(path + "features.txt");
 	ffile << slice << endl << part << endl;
 	ffile << ROI.x << ' ' << ROI.y << ' ' << ROI.width << ' ' << ROI.height <<endl;
 
@@ -516,15 +530,15 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 	const string of[] = {"b", "g", "r", "h", "s", "v"};
 	for (int i = 0; i < features.size(); i++) {
 		if (write_orig)
-			imwrite("set" + to_string(set) + "/" + of[i] + ".png", features[i]);
+			imwrite(path + of[i] + ".png", features[i]);
 		ffile << of[i] << endl;
 	}
 
-	int kernels[] = {11, 17, 21};
+	int kernels[] = {11, 17};
 	int nkernels = sizeof(kernels)/sizeof(int);
 
 	//features.reserve(nkernels*orig_features.size());
-	string blurs[] = {"median", "gaussian"};
+	string blurs[] = {"median"};
 	int nblurs = sizeof(blurs)/sizeof(*blurs);
 
 	for (int b = 0; b < nblurs; b++)
@@ -539,7 +553,7 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 					if (blurs[b] == "gaussian")
 						GaussianBlur(orig_features[f], filtered, Size(31, 31), kernels[i]);
 					//imshow("W", filtered);
-					imwrite("set" + to_string(set) + "/" + fID + ".png", filtered);
+					imwrite(path + fID + ".png", filtered);
 				}
 				features.push_back(filtered);
 				ffile << fID <<endl;
@@ -549,18 +563,18 @@ vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set,
 	// detecting hue
 	int channel = 3; // Hue
 	Mat thrsh;
-	int ranges[] = {127, 129, 130, 139, 140, 145};
-	int nranges = sizeof(ranges)/sizeof(int)/2;
+	int ranges[] = {130, 140, 135, 140, 135, 142, 130, 139};
+	int nranges = sizeof(ranges)/sizeof(int);
 	int size = 31;
-	int sigmas[] = {11, 17, 21};
+	int sigmas[] = {10};
 	int nsigmas = sizeof(sigmas)/sizeof(int);
 	for (int s = 0; s < nsigmas; s++) {
-		for (int i = 0; i < nranges; i++) {
+		for (int i = 0; i < nranges; i+=2) {
 			inRange(orig_features[channel], ranges[i], ranges[i+1], thrsh);
 			string fID = of[channel] + ",hist," + to_string(ranges[i]) + ","
 				+ to_string(ranges[i+1]) + ",gauss," + to_string(sigmas[s]);
 			GaussianBlur(thrsh, thrsh, Size(size, size), sigmas[s]);
-			imwrite("set" + to_string(set) + "/" + fID + ".png", thrsh);
+			imwrite(path + fID + ".png", thrsh);
 			features.push_back(thrsh);
 			ffile << fID <<endl;
 		}
@@ -590,11 +604,12 @@ vector<int> concat_labels(vector<string> sets) {
 	return f;
 }
 
-vector<int> generate_random_pixels(Mat mask) {
+vector<int> generate_random_pixels(Mat mask, float n2p) {
 	Mat labels = mask.reshape(1, 1);
 	int positives = countNonZero(labels);
 	int n = labels.cols;
-	int neg_to_sample = positives/200*200;
+	int pos_to_sample = positives/200*200;
+	int neg_to_sample = pos_to_sample*n2p/200*200;
 	vector<int> perm(n - positives);
 	iota(perm.begin(), perm.end(), 0);
 	unsigned seed = time(0);
@@ -602,17 +617,17 @@ vector<int> generate_random_pixels(Mat mask) {
 
 	vector<int> positions(n - positives);
 	int current = 0;
-	vector<int> pixels(neg_to_sample*2);
+	vector<int> pixels(neg_to_sample + pos_to_sample);
 	for (int i = 0; i < n; i++) {
 		if ((int)labels.at<uchar>(0, i) > 0) {
-			if (i - current < neg_to_sample)
+			if (i - current < pos_to_sample)
 				pixels[i - current] = i;
 			continue;
 		}
 		positions[current] = i; current++;
 	}
 	for (int i = 0; i < neg_to_sample; i++) {
-		pixels[neg_to_sample + i] = positions[perm[i]];
+		pixels[pos_to_sample + i] = positions[perm[i]];
 	}
 	/*
 	Mat random(image.size(), CV_8UC1);
@@ -638,10 +653,12 @@ Mat get_pixels(Mat image, vector<int> pixels) {
 	return sampled;
 }
 
-void generate_random_subset(string path, string newpath, Rect patch) {
+void generate_random_subset(string path, string newpath, Rect patch, float n2p) {
+	_mkdir(newpath.c_str());
 	vector<Mat> features = load_ROI_features(path);
 	Mat classes = load_ROI_classes(path);
-	vector<int> rand = generate_random_pixels(classes(patch).clone());
+	if (patch == Rect()) patch = Rect(0, 0, classes.cols, classes.rows); 
+	vector<int> rand = generate_random_pixels(classes(patch).clone(), n2p);
 	vector<string> files = read_feature_file(path);
 	copy_file(path+"features.txt", newpath+"features.txt");
 	for (int i = 0; i < features.size(); i++) {
@@ -661,4 +678,83 @@ bool copy_file(string SRC, string DEST)
     std::ofstream dest(DEST, std::ios::binary);
     dest << src.rdbuf();
     return src && dest;
+}
+
+void extract_patch(string path, Rect ROI, string newpath) {
+	vector<Mat> f = load_ROI_features(path);
+	vector<string> files = read_feature_file(path);
+	copy_file(path+"features.txt", newpath+"features.txt");
+	for (int i = 0; i < files.size(); i++) {
+		imwrite(newpath + files[i] + ".png", f[i](ROI));
+	}
+	Mat c = load_ROI_classes(path);
+	imwrite(newpath + "fl.png", c(ROI));
+}
+
+void bulk_feature_creation(vector<int> images, string base_path, int ratio) {
+	for (int i = 0; i < images.size(); i+=2) {
+		string end_path = base_path + " slice " + to_string(images[i]) + " part " + to_string(images[i+1]) + "/";
+		get_ROI_features(images[i], images[i+1], Rect(), end_path);
+		generate_random_subset(end_path, "rnd" + end_path, Rect(), ratio);
+	}
+}
+
+vector<vector<string>> read_image_names(string path) {
+	vector<vector<string>> images(16);
+	ifstream input(path);
+	for (int s = 0; s <16; s++) {
+		string line;
+		getline(input, line);
+		vector<string> files = split(line, '\'');
+		images[s] = vector<string>(files.begin()+2, files.end());
+	}
+	return images;
+}
+
+vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov) {
+	vector<vector<int>> v(paths.size());
+	for (int i = 0; i < paths.size(); i++) {
+		cout<<"Loading "<<fov<<" "<<paths[i]<<endl;
+		if (fov == "features")
+			v[i] = feat_vect_t(load_ROI_features(paths[i]));
+		else
+			v[i] = feat_vect_t(load_ROI_classes(paths[i]));
+		cout<<"Size: "<<v[i].size()<<endl;
+	}
+	return v;
+}
+
+vector<vector<Mat>> bulkLoad(vector<string> paths) {
+	vector<vector<Mat>> v(paths.size());
+	for (int i = 0; i < paths.size(); i++) {
+		v[i] = load_ROI_features(paths[i]);
+	}
+	return v;
+}
+
+vector<vector<int>> bulkFeatVectT(vector<vector<Mat>> in) {
+	vector<vector<int>> out(in.size());
+	for (int i = 0; i < in.size(); i++) {
+		out[i] = feat_vect_t(in[i]);
+	}
+	return out;
+}
+
+vector<string> get_paths(vector<int> images, string base_path) {
+	vector<string> paths(images.size()/2);
+	for (int i = 0; i < images.size(); i+=2) {
+		paths[i] = base_path + " slice " + to_string(images[i]) + " part " + to_string(images[i+1]) + "/";
+	}
+	return paths;
+}
+
+vector<int> exclude_set(vector<vector<int>> totrain, int n) {
+	int size = 0;
+	for(vector<int> v : totrain) size += v.size();
+	cout<<"Total size: "<<size<<" . Excluding set of size "<<totrain[n].size()<<".\n";
+	vector<int> out; out.reserve(size);
+	for(int i = 0; i < totrain.size(); i++)
+		if (i != n) out.insert(out.begin(), totrain[i].begin(), totrain[i].end());
+	cout<<size - totrain[n].size()<<" = "<<out.size()<<endl;
+	return out;
 }

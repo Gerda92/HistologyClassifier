@@ -1,0 +1,25 @@
+1
+30 Gy 2 Wo Le 2 65_part1
+400 900 200 250
+b
+g
+r
+h
+s
+v
+b,median,11
+b,median,17
+g,median,11
+g,median,17
+r,median,11
+r,median,17
+h,median,11
+h,median,17
+s,median,11
+s,median,17
+v,median,11
+v,median,17
+h,hist,130,140,gauss,10
+h,hist,135,140,gauss,10
+h,hist,135,142,gauss,10
+h,hist,130,139,gauss,10
