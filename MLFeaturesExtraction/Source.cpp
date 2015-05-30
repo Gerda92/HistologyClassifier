@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "normalization.h"
 
 clock_t then = clock();
 clock_t now;
@@ -28,6 +29,14 @@ int main( int argc, char** argv ) {
 	int slice = 1;
 	string part = "30 Gy 2 Wo Le 2 65_part1.png";
 
+	//Mat img = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part);
+	//Mat img = imread("C:/Users/Gerda/Documents/MATLAB/image.png");
+	Mat img = imread("C:/Users/Gerda/Desktop/image.png");
+
+	//color_deconv(img(Rect(0, 0, 300, 300)));
+	color_deconv(img);
+
+	/*
 	int img[] = {1, 1, 2, 1, 3, 1, 4, 1, 5, 1, 6, 1};
 	
 	vector<string> paths = get_paths(vector<int>(img, end(img)), "crossvalid");
@@ -66,9 +75,10 @@ int main( int argc, char** argv ) {
 		cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
 	}
 	
+
 	// Fetures for small patch
 	//Rect ROI = Rect(400, 900, 200, 250);
-	/*
+	
 	_mkdir("set11");
 	get_ROI_features(slice, part, ROI, 11);
 
@@ -89,7 +99,10 @@ int main( int argc, char** argv ) {
 	vector<int> features = concat_sets(vsets);
 	vector<int> classes = concat_labels(vsets);
 	restore_patches(features, 19, patches);
-	
+	*/
+
+	Rect ROI = Rect(0, 0, 4300, 4236);
+	get_ROI_features(2, 1, ROI, 6);
 
 	// 2/3 training set features
 	ROI = Rect(0, 0, 4300, 4236);
@@ -112,7 +125,7 @@ int main( int argc, char** argv ) {
 	//generate_random_subset("set6/", "rnd3/", ROI, 3);
 	//extract_patch("set6/", ROI, "test1/");
 	
-	
+	/*
 
 	ROI = Rect(0, 0, 6660, 4236);
 	_mkdir("set16");

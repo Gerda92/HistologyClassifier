@@ -275,6 +275,16 @@ vector<vector<string>> read_image_names(string path = "../ReadImageNames/example
 	return images;
 }
 
+vector<int> loadFeaturesFast(string path) {
+	cout<<timet()<<endl;
+	Mat f = imread(path + "precomp.png", 0);
+	cout<<timet()<<endl;
+	vector<int> v;
+	f.reshape(1, 1).row(0).copyTo(v);
+	cout<<timet()<<endl;
+	return v;
+}
+
 vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov) {
 	vector<vector<int>> v(paths.size());
 	for (int i = 0; i < paths.size(); i++) {
@@ -322,16 +332,6 @@ void precomputeROI(string path) {
 		}
 	}
 	imwrite(path + "precomp.png", result);
-}
-
-vector<int> loadFeaturesFast(string path) {
-	cout<<timet()<<endl;
-	Mat f = imread(path + "precomp.png", 0);
-	cout<<timet()<<endl;
-	vector<int> v;
-	f.reshape(1, 1).row(0).copyTo(v);
-	cout<<timet()<<endl;
-	return v;
 }
 
 #endif
