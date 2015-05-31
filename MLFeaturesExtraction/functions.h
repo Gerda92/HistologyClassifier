@@ -76,16 +76,4 @@ void extract_patch(string path, Rect ROI, string newpath);
 
 vector<vector<string>> read_image_names(string path = "../ReadImageNames/example.txt");
 
-void bulk_feature_creation(vector<int> images, string base_path, int ratio);
-
-vector<vector<Mat>> bulkLoad(vector<string> paths);
-
-vector<vector<int>> bulkFeatVectT(vector<vector<Mat>> in);
-
-vector<string> get_paths(vector<int> images, string base_path);
-
-vector<int> exclude_set(vector<vector<int>> totrain, int n) ;
-
-vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov);
-
 #endif

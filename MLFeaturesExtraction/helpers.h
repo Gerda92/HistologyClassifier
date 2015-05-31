@@ -190,6 +190,11 @@ vector<int> generate_random_pixels(Mat mask, float n2p) {
 	int n = labels.cols;
 	int pos_to_sample = positives/200*200;
 	int neg_to_sample = pos_to_sample*n2p/200*200;
+	if (neg_to_sample >= n - positives) {
+		vector<int> pixels(n/200*200);
+		iota(pixels.begin(), pixels.end(), 0);
+		return pixels;
+	}
 	vector<int> perm(n - positives);
 	iota(perm.begin(), perm.end(), 0);
 	unsigned seed = time(0);
@@ -298,6 +303,9 @@ vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov) {
 	return v;
 }
 
+string get_suffix(int slice, int part) {
+	return " slice " + to_string(slice) + " part " + to_string(part) + "/";
+}
 
 vector<string> get_paths(vector<int> images, string base_path) {
 	vector<string> paths(images.size()/2);
@@ -333,5 +341,132 @@ void precomputeROI(string path) {
 	}
 	imwrite(path + "precomp.png", result);
 }
+
+
+vector<Mat> get_ROI_features(int slice, string suffix, string part,  string path, Rect ROI = Rect(), string twothirds = "ROI",
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true) {
+
+	_mkdir(path.c_str());
+	Mat src, hsv, mask;
+	
+	src = imread("E:/DataMLMI/Slice" + to_string(slice) + suffix + "/" + part, 1);
+	cout<<"E:/DataMLMI/Slice" + to_string(slice) + suffix + "/" + part<<endl;
+	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part, 0);
+	if (twothirds == "two thirds") ROI = Rect(0, 0, src.cols*2/3, src.rows);
+	else if (twothirds == "last third") ROI = Rect(src.cols*2/3+1, 0, src.cols - src.cols*2/3 - 1, src.rows);
+	else if (ROI.width == 0) ROI = Rect(0, 0, src.cols, src.rows);
+	imwrite(path + "fl.png", mask(ROI));
+	src = src(ROI);
+
+	vector<Mat> orig_features;
+	split(src, orig_features);
+
+	cvtColor(src, hsv, COLOR_BGR2HSV);
+	vector<Mat> hsv_features;
+	split(hsv, hsv_features);
+
+	orig_features.insert(orig_features.end(), hsv_features.begin(), hsv_features.end());
+
+	ofstream ffile;
+
+	ffile.open(path + "features.txt");
+	ffile << slice << endl << part << endl;
+	ffile << ROI.x << ' ' << ROI.y << ' ' << ROI.width << ' ' << ROI.height <<endl;
+
+	vector<Mat> features(orig_features.begin(), orig_features.end());
+	const string of[] = {"b", "g", "r", "h", "s", "v"};
+	for (int i = 0; i < features.size(); i++) {
+		if (write_orig)
+			imwrite(path + of[i] + ".png", features[i]);
+		ffile << of[i] << endl;
+	}
+
+	int kernels[] = {11, 17};
+	int nkernels = sizeof(kernels)/sizeof(int);
+
+	//features.reserve(nkernels*orig_features.size());
+	string blurs[] = {"median"};
+	int nblurs = sizeof(blurs)/sizeof(*blurs);
+
+	for (int b = 0; b < nblurs; b++)
+		for (int f = 0; f < orig_features.size(); f++) {
+			for (int i = 0; i < nkernels; i++) {
+				Mat filtered(src.size(), CV_8UC1);
+				int index = f*nkernels + i;
+				string fID = of[f] + "," + blurs[b] + "," + to_string(kernels[i]);
+				if (write_blur) {
+					if (blurs[b] == "median")
+						medianBlur(orig_features[f], filtered, kernels[i]);
+					if (blurs[b] == "gaussian")
+						GaussianBlur(orig_features[f], filtered, Size(31, 31), kernels[i]);
+					//imshow("W", filtered);
+					imwrite(path + fID + ".png", filtered);
+				}
+				features.push_back(filtered);
+				ffile << fID <<endl;
+			}
+		}
+
+	// detecting hue
+	int channel = 3; // Hue
+	Mat thrsh;
+	int ranges[] = {130, 140, 135, 140, 135, 142, 130, 139};
+	int nranges = sizeof(ranges)/sizeof(int);
+	int size = 31;
+	int sigmas[] = {10};
+	int nsigmas = sizeof(sigmas)/sizeof(int);
+	for (int s = 0; s < nsigmas; s++) {
+		for (int i = 0; i < nranges; i+=2) {
+			inRange(orig_features[channel], ranges[i], ranges[i+1], thrsh);
+			string fID = of[channel] + ",hist," + to_string(ranges[i]) + ","
+				+ to_string(ranges[i+1]) + ",gauss," + to_string(sigmas[s]);
+			GaussianBlur(thrsh, thrsh, Size(size, size), sigmas[s]);
+			imwrite(path + fID + ".png", thrsh);
+			features.push_back(thrsh);
+			ffile << fID <<endl;
+		}
+	}
+	ffile.close();
+
+	return features;
+}
+
+vector<Mat> get_ROI_features(int slice, string part, string path, Rect ROI = Rect(), string twothirds = "ROI",
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true) {
+	return get_ROI_features(slice, "", part, path, ROI, twothirds, write_thresh, write_blur, write_orig);
+}
+
+vector<Mat> get_ROI_features(int slice, string part, Rect ROI, int set, string twothirds = "ROI",
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true) {
+	return get_ROI_features(slice, part, "set" + to_string(set) + "/", ROI, twothirds,
+		write_thresh, write_blur, write_orig);
+}
+
+vector<Mat> get_ROI_features(int slice, string suffix, int part, string path, Rect ROI = Rect(), string twothirds = "ROI",
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true) {
+	vector<vector<string>> names = read_image_names();
+	return get_ROI_features(slice, suffix, names[slice-1][part-1], path, ROI, twothirds,
+		write_thresh, write_blur, write_orig);
+}
+
+vector<Mat> get_ROI_features(int slice, int part, string path, Rect ROI = Rect(), string twothirds = "ROI",
+							 bool write_thresh = true, bool write_blur = true, bool write_orig = true) {
+	return get_ROI_features(slice, "", part, path, ROI, twothirds, write_thresh, write_blur, write_orig);
+}
+
+// Creating randomized subsets of slices
+void bulkCreateRandomizedSubsets(string base, vector<int>ratios, int nslices = 6) {
+	int p = 1; // part
+	for (int i = 1; i <= nslices; i++) {
+		string path = base + " slice " + to_string(i) + " part " + to_string(p) + "/";
+		for (int j = 0; j < ratios.size(); j++) {
+			string set = "rnd " + to_string(ratios[j]) + " " + path;
+			//_mkdir(set.c_str());
+			generate_random_subset(path, set, Rect(), ratios[j]);
+			precomputeROI(set);
+		}
+	}
+}
+
 
 #endif

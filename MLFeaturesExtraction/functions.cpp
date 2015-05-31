@@ -1,44 +1,5 @@
 #include "functions.h"
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, elems);
-    return elems;
-}
-
-
-string type2str(int type) {
-  string r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  r += "C";
-  r += (chans+'0');
-
-  return r;
-}
-
 void calcHists(vector<Mat> channels, vector<vector<Mat>> hist, int index, Mat mask) {
 	int histSize = 256;
 	float range[] = { 0, 256 } ;
@@ -345,6 +306,196 @@ void nothing() {
 	waitKey();
 	return 0;
 */
+		/*	
+	Mat pmask = mask(patch);
+	imwrite("set1/fl.png", pmask);
+	ofstream myfile;
+	myfile.open ("set1/fd.txt");
+	myfile << "Per. of positive: " << countNonZero(pmask)*1.0/pmask.rows/pmask.cols<<endl;
+	myfile.close();
+	for (int i = 0; i < features.size(); i++) {
+		features[i] = imread("Window " + to_string(i) + ".png");
+		Mat crop = features[i](patch);
+		imwrite("set1/f" + to_string(i) + ".png", crop);
+	}
+	cout<<"Done."<<endl;
+	*/
+
+		/*
+
+	ROI = Rect(0, 0, 6660, 4236);
+	_mkdir("set16");
+	get_ROI_features(slice, part, ROI, 16, true, false, false);
+	//Rect ROI = Rect(0, 0, 6660, 4236);
+	//get_ROI_features(slice, part, ROI, 6, true, false, false);
+
+	
+
+
+	Mat mask, image;
+	image = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 0);
+	mask = imread("E:/DataMLMI/GTSlice" + to_string(slice) + "/Labels_" + part + ".png", 0);
+	vector<int> rand = generate_random_pixels(mask);
+	get_pixels(image, rand);
+	*/
+	/*
+
+	//vector<Mat> features = load_ROI_features(set);
+
+	
+	Mat tf = features[0].reshape(1, features[0].rows*features[0].cols);
+	for(int i = 1; i < features.size(); i++) {
+		Mat f = features[i].reshape(1, features[0].rows*features[0].cols);
+		hconcat(tf, f, tf);
+	}
+
+	tf.convertTo(tf, CV_32FC1);
+
+	Mat classes = load_ROI_classes(set).reshape(1,50000);
+	
+	classes.convertTo(classes, CV_32SC1);
+    RTrees::Params  params( 4, // max_depth,
+                        500, // min_sample_count,
+                        0, // regression_accuracy,
+                        false, // use_surrogates,
+                        2, // max_categories,
+                        Mat(), // priors,
+                        false, // calc_var_importance,
+                        3, // nactive_vars,
+                        TermCriteria(TermCriteria::MAX_ITER, 5, 0) // max_num_of_trees_in_the_forest,
+                       );
+
+    Ptr<RTrees> rtrees = StatModel::train<RTrees>(tf, ROW_SAMPLE, classes, params);
+	*/
+//	int i;
+//	cin>>i;
+
+	/*
+	vector<int> v = load_ROI_features("set1/");
+
+	vector<int> v2 = feat_vect_t(features);
+	restore_feat_vect_t(v2, features.size(), ROI);
+	
+	int example = 10;
+	for(int i = 0; i < features.size(); i++) {
+		cout<<v[ROI.width*ROI.height*i + example]<<endl;
+	}
+
+	for(int i = 0; i < features.size(); i++) {
+		cout<<v2[features.size()*example + i]<<endl;
+	}
+	
+	
+	int i;
+	cin >> i;
+	*/
+	/*
+	Mat src, hsv, mask;
+	
+	src = imread("E:/DataMLMI/Slice" + to_string(slice) + "/" + part + ".png", 1);
+	mask = imread("E:/DataMLMI/Slice" + to_string(slice) + "/Labels_" + part + ".png", 0);
+	//src = src(Rect(300, 400, 1000, 1000));
+
+	cout<<time()<<endl;
+	cout<<"Src and mask read. Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+
+	vector<Mat> orig_features;
+	split(src, orig_features);
+
+	cvtColor(src, hsv, COLOR_BGR2HSV);
+	vector<Mat> hsv_features;
+	split(src, hsv_features);
+
+	cout<<time()<<endl;
+	cout<<"BGR-HSV cvt; splits made. Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+
+	orig_features.insert(orig_features.end(), hsv_features.begin(), hsv_features.end());
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+
+	ofstream ffile;
+
+	ffile.open("fearures.txt", ios_base::app);
+
+	vector<Mat> features(orig_features.begin(), orig_features.end());
+	const string of[] = {"b", "g", "r", "h", "s", "v"};
+	for (int i = 0; i < features.size(); i++) {
+		imwrite(part + "," + of[i] + ".png", features[i]);
+	}
+
+	int kernels[] = {11};
+	int nkernels = sizeof(kernels)/sizeof(int);
+
+	features.reserve(nkernels*orig_features.size());
+
+	for (int f = 0; f < orig_features.size(); f++) {
+		for (int i = 0; i < nkernels; i++) {
+			Mat filtered(src.size(), CV_8UC1);
+			int index = f*nkernels + i;
+			medianBlur(orig_features[f], filtered, kernels[i]);
+			features[index] = filtered;
+			//imshow("W", filtered);
+			imwrite(part + "," + of[i] + ".png", features[i]);
+		}
+	}
+
+	ffile.close()
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	
+		vector<vector<int>> features =  bulkLoadVectorize(paths, "features");
+	vector<vector<int>> labels = bulkLoadVectorize(paths, "labels");
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+
+	//vector<string> paths_test = get_paths(vector<int>(img, end(img)), "crossvalid");
+
+	//vector<vector<int>> features_test = bulkLoadVectorize(paths_test, "features");
+	//vector<vector<int>> labels_test = bulkLoadVectorize(paths_test, "labels");
+
+	cout<<time()<<endl;
+	cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	// cross validation
+	for (int i = 0; i < paths.size(); i++) {
+		vector<int> feat = exclude_set(features, i);
+		vector<int> lab = exclude_set(labels, i);
+		// train
+		//vector<int> featt = features_test[i];
+		//vector<int> labt = labels_test[i];
+		// test
+		cout<<time()<<endl;
+		cout<<"Secs elapsed: "<<double(now - then) / CLOCKS_PER_SEC<<endl;
+	}
+	
+
+	// Fetures for small patch
+	//Rect ROI = Rect(400, 900, 200, 250);
+	
+	_mkdir("set11");
+	get_ROI_features(slice, part, ROI, 11);
+
+	// Features for three small selected patches
+	Rect rects[] = {Rect(420, 970, 180, 150), Rect(1380, 1470, 200, 190), Rect(1950, 1870, 100, 100)};
+	vector<Rect> patches(rects, end(rects));
+
+	int offset = 13;
+	for (int i = 0; i < sizeof(rects)/sizeof(*rects); i++) {
+		string set = "set" + to_string(i + offset) + "/";
+		_mkdir(set.c_str());
+		get_ROI_features(slice, part, rects[i], i+offset);
+	}
+	
+	
+	const char * sets[] = {"set3/", "set4/", "set5/"};
+	vector<string> vsets(sets, end(sets));
+	vector<int> features = concat_sets(vsets);
+	vector<int> classes = concat_labels(vsets);
+	restore_patches(features, 19, patches);
+	*/
+
 
 }
 
@@ -387,25 +538,6 @@ vector<int> feat_vect(vector<Mat> input) {
 
 	}
 	return output;
-}
-
-vector<int> feat_vect_t(vector<Mat> input) {
-	vector<int> output(input[0].rows*input[0].cols*input.size());
-	for (int f = 0; f < input.size(); f++) {
-		for (int i = 0; i < input[f].rows; i++) {
-			for (int j = 0; j < input[f].cols; j++) {
-				int example = i*input[f].cols+j;
-				int index = example*input.size()+f;
-				output[index] = (int)input[f].at<uchar>(i,j);
-			}
-		}
-	}
-	return output;
-}
-
-vector<int> feat_vect_t(Mat input) {
-	vector<Mat> v(1, input);
-	return feat_vect_t(v);
 }
 
 vector<Mat> restore_feat_vect_t(vector<int> input, int nf, Rect patch) {
@@ -678,83 +810,4 @@ bool copy_file(string SRC, string DEST)
     std::ofstream dest(DEST, std::ios::binary);
     dest << src.rdbuf();
     return src && dest;
-}
-
-void extract_patch(string path, Rect ROI, string newpath) {
-	vector<Mat> f = load_ROI_features(path);
-	vector<string> files = read_feature_file(path);
-	copy_file(path+"features.txt", newpath+"features.txt");
-	for (int i = 0; i < files.size(); i++) {
-		imwrite(newpath + files[i] + ".png", f[i](ROI));
-	}
-	Mat c = load_ROI_classes(path);
-	imwrite(newpath + "fl.png", c(ROI));
-}
-
-void bulk_feature_creation(vector<int> images, string base_path, int ratio) {
-	for (int i = 0; i < images.size(); i+=2) {
-		string end_path = base_path + " slice " + to_string(images[i]) + " part " + to_string(images[i+1]) + "/";
-		get_ROI_features(images[i], images[i+1], Rect(), end_path);
-		generate_random_subset(end_path, "rnd" + end_path, Rect(), ratio);
-	}
-}
-
-vector<vector<string>> read_image_names(string path) {
-	vector<vector<string>> images(16);
-	ifstream input(path);
-	for (int s = 0; s <16; s++) {
-		string line;
-		getline(input, line);
-		vector<string> files = split(line, '\'');
-		images[s] = vector<string>(files.begin()+2, files.end());
-	}
-	return images;
-}
-
-vector<vector<int>> bulkLoadVectorize(vector<string> paths, string fov) {
-	vector<vector<int>> v(paths.size());
-	for (int i = 0; i < paths.size(); i++) {
-		cout<<"Loading "<<fov<<" "<<paths[i]<<endl;
-		if (fov == "features")
-			v[i] = feat_vect_t(load_ROI_features(paths[i]));
-		else
-			v[i] = feat_vect_t(load_ROI_classes(paths[i]));
-		cout<<"Size: "<<v[i].size()<<endl;
-	}
-	return v;
-}
-
-vector<vector<Mat>> bulkLoad(vector<string> paths) {
-	vector<vector<Mat>> v(paths.size());
-	for (int i = 0; i < paths.size(); i++) {
-		v[i] = load_ROI_features(paths[i]);
-	}
-	return v;
-}
-
-vector<vector<int>> bulkFeatVectT(vector<vector<Mat>> in) {
-	vector<vector<int>> out(in.size());
-	for (int i = 0; i < in.size(); i++) {
-		out[i] = feat_vect_t(in[i]);
-	}
-	return out;
-}
-
-vector<string> get_paths(vector<int> images, string base_path) {
-	vector<string> paths(images.size()/2);
-	for (int i = 0; i < images.size(); i+=2) {
-		paths[i] = base_path + " slice " + to_string(images[i]) + " part " + to_string(images[i+1]) + "/";
-	}
-	return paths;
-}
-
-vector<int> exclude_set(vector<vector<int>> totrain, int n) {
-	int size = 0;
-	for(vector<int> v : totrain) size += v.size();
-	cout<<"Total size: "<<size<<" . Excluding set of size "<<totrain[n].size()<<".\n";
-	vector<int> out; out.reserve(size);
-	for(int i = 0; i < totrain.size(); i++)
-		if (i != n) out.insert(out.begin(), totrain[i].begin(), totrain[i].end());
-	cout<<size - totrain[n].size()<<" = "<<out.size()<<endl;
-	return out;
 }
